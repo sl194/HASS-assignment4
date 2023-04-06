@@ -1,21 +1,69 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style></style>
+    <title>IDV: Assignment 4</title>
+  <style>h1 {
+      padding-top: 1em;
+  margin: 0;
+      font-weight: 700;
+  font-size: 30px;
+  text-align: center;
+}
+      h2 {
+  font-size: 18px;
+    font-weight: 200;
+  text-align: center;
+}
+      
+      lightbulb{
+            display: flex;
+  justify-content: center;
+          padding-bottom: 3em;
+      }
+        p {
+    position: absolute; 
+  font-size: 12px;
+    font-weight: 200;
+  text-align: center;  
+    padding: 6px;
+    border: 1px solid #ccc;
+  border-radius: 4px;
+}
+      body{
+          font-family:"Helvetica", sans-serif;
+      }
+      
+  
+    .tooltip {   
+  position: absolute;
+  padding: 7px;
+  font-size: 0.7em;
+ font-weight:200;
+  pointer-events: none;
+  background: #fff;
+/*  border: 1px solid #ccc;*/
+  border-radius: 4px;
+  box-shadow: 3px 3px 10px 0px rgba(0, 0, 0, 0.25);
+          z-index: 10;
+}  
+    </style>
+    <h1>Singapore Population Map 🇸🇬</h1>
+<!--    <h2>IDV Assignment 4 | Sharmayne Lim Zhiyu (1004491)</h2>-->
+      <lightbulb><p>💡 Hover over different parts of the map to find out more!</p></lightbulb><br>
 </head>
 <body>
-<svg></svg>
+<svg id="legend"></svg><svg id="chloropleth"></svg>
+<div class="tooltip"></div>
+    
 <script src="https://d3js.org/d3.v7.min.js"></script>
 
 <script>
-
 let width = 1000, height = 600;
-
-let svg = d3.select("svg")
+let svg = d3.select("#chloropleth")
     .attr("viewBox", "0 0 " + width + " " + height)
 
 // Load external data and boot
-Promise.all([d3.json("sgmap.json"), d3.csv("population2022.csv")]).then(data => {
+Promise.all([d3.json("https://raw.githubusercontent.com/sl194/HASS-assignment4/main/sgmap_og.json"), d3.csv("https://raw.githubusercontent.com/sl194/HASS-assignment4/main/population2022.csv")]).then(data => {
 
 let mapData = data[0].features;
 let popData = data[1];
@@ -24,7 +72,8 @@ let popData = data[1];
 mapData.forEach(d => {
   let subzone = popData.find(e => e.Subzone.toUpperCase() == d.properties.Name);
   d.popdata = (subzone != undefined) ? parseInt(subzone.Population) : 0;
-})
+
+   })
 
 console.log(mapData);
 
@@ -35,15 +84,122 @@ let projection = d3.geoMercator()
 
 let geopath = d3.geoPath().projection(projection);
 
+    let colorScale = d3.scaleThreshold()
+	.domain([1, 20000, 40000, 60000, 80000, 100000, 120000])
+	.range(d3.schemeOrRd[7]);
+    
 svg.append("g")
-    .attr("id", "districts")
-    .selectAll("path")
-    .data(mapData)
+  .attr("id", "districts")
+  .selectAll("path")
+  .data(mapData)
+  .enter()
+  .append("path")
+  .attr("d", geopath)
+  .attr("stroke", "black")
+  .attr("stroke-width", "0.25px")
+  .attr("fill", d => colorScale(d.popdata))
+    
+ .style("stroke", "transparent")
+		.attr("class", function(d) {
+			return "Subzone"
+		})
+		.style("opacity", 1)
+    
+
+    
+    .on("mouseover", function(event, d) {
+  d3.selectAll(".Subzone")
+    .transition()
+    .duration(200)
+    .style("opacity", .2)
+    .style("stroke", "transparent");
+
+  d3.select(this)
+    .transition()
+    .duration(200)
+    .style("opacity", 1)
+    .style("stroke", "black");
+
+  d3.select(".tooltip")
+    .style("left", (event.pageX + 20) + "px")
+    .style("top", (event.pageY - 20) + "px")
+    .transition().duration(400)
+    .style("opacity", 1)
+    .style("display", "block")
+    .text('Total population of '+ d.properties.Name + ': ' + d.popdata);
+})
+    
+    .on("mouseout", function(event, d) {
+	d3.selectAll(".Subzone")
+			.transition()
+			.duration(200)
+			.style("opacity", 1)
+			.style("stroke", "transparent");
+	
+  d3.select(".tooltip")
+    .transition().duration(300)
+    .style("opacity", 0);
+});
+    
+    
+    
+ 
+
+    
+      //Create a legend 
+const legendSvg = d3.select("#legend")
+    .attr("width", width)
+    .attr("height", 40);
+
+const windowWidth = window.innerWidth;
+const windowHeight = window.innerHeight;
+    
+const legendWidth = 300;
+const legendHeight = 20;
+const legendMargin = { top: 0, right: windowWidth * 0.42, bottom: 0, left: windowWidth * 0.42 };
+
+
+// Create a scale for the legend
+const legendX = d3.scaleLinear()
+    .domain([0, 120000])
+    .range([0, legendWidth]);
+
+ // Create a group for the legend
+const legendG = legendSvg.append("g")
+    .attr("transform", `translate(${legendMargin.left}, ${legendMargin.top})`);
+
+
+// Add the color scale to the legend
+legendG.selectAll("rect")
+    .data(colorScale.range())
     .enter()
-    .append("path")
-    .attr("d", geopath)
-    .attr("stroke", "black")
-    .attr("fill", "grey");
+    .append("rect")
+    .attr("x", (d, i) => legendX(colorScale.domain()[i - 1]))
+    .attr("y", 0)
+    .attr("width", (d, i) => legendX(colorScale.domain()[i + 1]) - legendX(colorScale.domain()[i]))
+    .attr("height", legendHeight)
+    .attr("stroke", "#ffffff")
+    .attr("stroke-width", "0.5px")
+    .attr("fill", d => d);
+
+// Add legend labels
+const legendLabels = ["0", "20k", "40k", "60k", "80k", "100k"];
+const legendLabelY = legendMargin.top + legendHeight + 20;
+
+legendLabels.forEach((label, i) => {
+  legendSvg.append("text")
+    .attr("x", legendX(colorScale.domain()[i]) + legendMargin.left)
+    .attr("y", legendLabelY)
+    .attr("font-family", "Helvetica Neue")
+    .attr("font-size", "10px")
+    .attr("font-weight", "300")
+    .attr("text-anchor", "middle")
+    .attr("fill", "#000000")
+    .text(label);
+});   
+    
+
+
 })
 
 </script>
