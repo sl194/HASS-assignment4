@@ -7,7 +7,7 @@
 <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
 
 <div class="map">
-  <h1>World population map</h1>
+  <h1>Singapore Population Map</h1>
     <h2>IDV Assignment 4 | Sharmayne Lim Zhiyu (1004491)</h2>
   <svg id="my_dataviz" width="1150" height="650"></svg></div>
 
@@ -77,9 +77,9 @@ const svg = d3.select("svg"),
 	height = svg.attr("height"),
 	path = d3.geoPath(),
 	data = d3.map(),
-//	worldmap = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
+	sgmap = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson",
 //    worldpopulation = "https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world_population.csv";
-      sgmap = "https://raw.githubusercontent.com/sl194/HASS-assignment4/main/sgmap.json",
+//      sgmap = "https://raw.githubusercontent.com/sl194/HASS-assignment4/main/sgmap.json",
       sgpopulation = "https://raw.githubusercontent.com/sl194/HASS-assignment4/main/population2022.csv";
 
 
@@ -92,8 +92,8 @@ const projection = d3.geoRobinson()
 
 // Define color scale
 const colorScale = d3.scaleThreshold()
-	.domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
-	.range(d3.schemeBlues[7]);
+	.domain([100, 1000, 10000, 30000, 100000, 500000])
+	.range(d3.schemeOrRd[7]);
 
 // add tooltip
 const tooltip = d3.select("body").append("div")
@@ -139,7 +139,7 @@ function ready(error, topo) {
 			.style("top", (d3.event.pageY - 28) + "px")
 			.transition().duration(400)
 			.style("opacity", 1)
-			.text(d.properties.subzone + ': ' + Math.round((d.total / 1000000) * 10) / 10 + ' mio.');
+			.text(d.properties.subzone + ': ' + Math.round((d.total / 1000) * 10) / 10 + ' thousand people');
 	}
 
 	let mouseLeave = function() {
@@ -226,12 +226,12 @@ function ready(error, topo) {
 			return height - (i * ls_h) - ls_h - 6;
 		})
 		.text(function(d, i) {
-			if (i === 0) return "< " + d[1] / 1000000 + " m";
-			if (d[1] < d[0]) return d[0] / 1000000 + " m +";
-			return d[0] / 1000000 + " m - " + d[1] / 1000000 + " m";
+			if (i === 0) return "< " + d[1] / 1000 + " thousand";
+			if (d[1] < d[0]) return d[0] / 1000 + " thousand +";
+			return d[0] / 1000 + " thousand - " + d[1] / 1000 + " thousand";
 		});
 
-	legend.append("text").attr("x", 15).attr("y", 280).text("Population (Million)");
+	legend.append("text").attr("x", 15).attr("y", 280).text("Population (Thousands)");
 }
 
 // Zoom functionality
