@@ -93,7 +93,7 @@ const projection = d3.geoRobinson()
 // Define color scale
 const colorScale = d3.scaleThreshold()
 	.domain([100000, 1000000, 10000000, 30000000, 100000000, 500000000])
-	.range(d3.schemeOrRd[7]);
+	.range(d3.schemeBlues[7]);
 
 // add tooltip
 const tooltip = d3.select("body").append("div")
